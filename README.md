@@ -56,6 +56,30 @@ This **AI-driven matching system**:
 - **Docker Desktop**
 - **OpenAI API key**
 - **PostgreSQL** installed or running via **Docker**
+  
+### **Project Structure**
+   ```resume-matcher/
+      ├── .env                    # Environment variables (OPENAI_API_KEY)
+      ├── requirements.txt        # Python dependencies
+      ├── app/                    # Main application code
+      │   ├── __init__.py         # Makes app a Python package
+      │   ├── main.py             # FastAPI entry point
+      │   ├── models.py           # Pydantic models
+      │   ├── database.py         # PostgreSQL connection
+      │   ├── parsers/            # Parsing logic
+      │   │   ├── __init__.py
+      │   │   └── resume_parser.py
+      │   └── matching/           # Scoring logic
+      │       ├── __init__.py
+      │       └── scoring.py
+      ├── tests/                  # Test scripts
+      │   ├── __init__.py
+      │   └── test_data.json      # Sample resume/JD data
+      ├── data/                   # Optional: Raw data storage
+      │   ├── resumes/
+      │   └── job_descriptions/
+      └── README.md               # Project documentation
+   ```
 
 ### **Local Setup**
 1. Clone the repo:
