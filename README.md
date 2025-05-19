@@ -74,8 +74,13 @@ This **AI-driven matching system**:
     ```Start PostgreSQL:
     
     docker run --name resume-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
+    #if already created
+    docker start resume-db
+    
+    docker exec -it resume-db psql -U postgres  
     \l
     CREATE DATABASE resume_matcher;
+    \c resume_matcher
     \q
     ```
 
