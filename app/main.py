@@ -13,7 +13,7 @@ app = FastAPI()
 # Initialize database
 init_db()
 
-# Pydantic model for structured request validation
+# Pydantic models for request validation
 class ResumeRequest(BaseModel):
     resume_text: str
     category: Optional[str] = "default"
@@ -23,10 +23,14 @@ class JDRequest(BaseModel):
     company: Optional[str] = "unknown"
     category: Optional[str] = "general"
 
+class MatchRequest(BaseModel):
+    resume_text: str
+    jd_text: str
+
 @app.get("/")
 def read_root():
     return {
-        "message": "Resume Matcher API", 
+        "message": "Resume Matcher API",
         "docs": "http://127.0.0.1:8000/docs"
     }
 
@@ -56,36 +60,29 @@ async def parse_jd_endpoint(request: JDRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/match/{resume_id}/{jd_id}")
-async def match(resume_id: str, jd_id: str):
-    print(f"\n--- MATCH REQUEST ---\nResume: {resume_id}\nJD: {jd_id}")  # Debug log
-    
+# Updated Match Endpoint with Enhanced Validation
+@app.post("/match")
+async def match_direct(request: MatchRequest):
     try:
-        with get_db() as cur:
-            # Debug: Print raw data before processing
-            cur.execute("SELECT data FROM resumes WHERE id = %s", (resume_id,))
-            resume_data = cur.fetchone()
-            print(f"Resume Data: {resume_data[0] if resume_data else 'NOT FOUND'}")
-            
-            cur.execute("SELECT data FROM jds WHERE jd_id = %s", (jd_id,))
-            jd_data = cur.fetchone()
-            print(f"JD Data: {jd_data[0] if jd_data else 'NOT FOUND'}")
-            
-            if not resume_data or not jd_data:
-                raise HTTPException(404, "Data not found")
-            
-            # Add this debug line
-            print("Attempting to calculate score...")
-            
-            resume_dict = resume_data[0] if isinstance(resume_data[0], dict) else json.loads(resume_data[0])
-            jd_dict = jd_data[0] if isinstance(jd_data[0], dict) else json.loads(jd_data[0])
-            
-            resume = ParsedResume(**resume_dict)
-            jd = ParsedJD(**jd_dict)
-            
-            score = calculate_score(resume, jd)
-            return {"score": score}
-            
+        # Validate input texts
+        if not request.resume_text.strip() or not request.jd_text.strip():
+            raise HTTPException(status_code=422, detail="Input texts cannot be empty")
+
+        parsed_resume = parse_resume(request.resume_text)
+        parsed_jd = parse_jd(request.jd_text)
+
+        # Final validation on parsed sections
+        if not parsed_resume.sections:
+            raise HTTPException(status_code=422, detail="No valid sections found in resume")
+        if not parsed_jd.sections:
+            raise HTTPException(status_code=422, detail="No valid sections found in job description")
+
+        score = calculate_score(parsed_resume, parsed_jd)
+        return {"score": float(score)}
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=422, detail="Failed to parse document structure")
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        print(f"!!! ERROR: {str(e)}")  # Critical debug line
-        raise HTTPException(500, str(e))
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
