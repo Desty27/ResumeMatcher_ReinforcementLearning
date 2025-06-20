@@ -107,7 +107,11 @@ This **AI-driven matching system**:
     \c resume_matcher
     \q
     ```
+4.1. Initialize Database Schema
 
+   ```bash
+   docker exec -i resume-db psql -U postgres -d resume_matcher < init_db/init.sql
+   ```
 
 5. Install dependencies:
    ```bash
