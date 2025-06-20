@@ -123,6 +123,11 @@ This **AI-driven matching system**:
    ```
    http://localhost:8000/docs
    ```
+8. Run Streamlit Frontend
+   ```
+   streamlit run streamlit_app/main.py
+   ```
+Access UI: http://localhost:8501
 
 ---
 
